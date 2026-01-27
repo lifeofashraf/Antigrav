@@ -5,6 +5,8 @@ import { Label } from '../ui/Label';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import WorkExperienceFunc from './WorkExperience';
 import EducationFunc from './EducationComponent';
+import SkillsFunc from './SkillsComponent';
+import ProjectsFunc from './ProjectsComponent';
 
 const ResumeForm = ({ onUpdate }) => {
     const [data, setData] = useState(initialResumeData);
@@ -57,6 +59,26 @@ const ResumeForm = ({ onUpdate }) => {
                             onChange={(e) => handleChange('basics', 'phone', e.target.value)}
                         />
                     </div>
+                    <div className="space-y-2">
+                        <Label>City</Label>
+                        <Input
+                            value={data.basics.location?.city || ''}
+                            onChange={(e) => {
+                                const newLoc = { ...data.basics.location, city: e.target.value };
+                                handleChange('basics', 'location', newLoc);
+                            }}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Country Code</Label>
+                        <Input
+                            value={data.basics.location?.countryCode || ''}
+                            onChange={(e) => {
+                                const newLoc = { ...data.basics.location, countryCode: e.target.value };
+                                handleChange('basics', 'location', newLoc);
+                            }}
+                        />
+                    </div>
                     <div className="space-y-2 col-span-2">
                         <Label>Summary</Label>
                         <textarea
@@ -80,10 +102,17 @@ const ResumeForm = ({ onUpdate }) => {
                 onChange={(newEdu) => handleChange('education', null, newEdu)}
             />
 
-            {/* Skills Placeholder */}
-            <div className="text-center p-8 border-2 border-dashed border-slate-200 rounded-xl text-slate-400">
-                Skills Section Coming Soon...
-            </div>
+            {/* Skills */}
+            <SkillsFunc
+                skillsData={data.skills}
+                onChange={(newSkills) => handleChange('skills', null, newSkills)}
+            />
+
+            {/* Projects */}
+            <ProjectsFunc
+                projectData={data.projects}
+                onChange={(newProjects) => handleChange('projects', null, newProjects)}
+            />
         </div>
     );
 };

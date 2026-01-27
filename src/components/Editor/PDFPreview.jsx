@@ -14,6 +14,7 @@ const PDFPreview = ({ data }) => {
                     {data.basics.email && <span>{data.basics.email}</span>}
                     {data.basics.phone && <span>• {data.basics.phone}</span>}
                     {data.basics.location?.city && <span>• {data.basics.location?.city}, {data.basics.location?.countryCode}</span>}
+                    {data.basics.url && <span>• {data.basics.url}</span>}
                 </div>
             </header>
 
@@ -66,6 +67,45 @@ const PDFPreview = ({ data }) => {
                                 <div className="text-slate-600 font-medium">
                                     {edu.studyType} in {edu.area}
                                 </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Projects */}
+            {data.projects && data.projects.length > 0 && (
+                <section className="mb-8">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-100 pb-2">Projects</h3>
+                    <div className="space-y-4">
+                        {data.projects.map((proj, index) => (
+                            <div key={index}>
+                                <div className="flex justify-between items-baseline mb-1">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="font-bold text-lg text-slate-800">{proj.name}</h4>
+                                        {proj.url && <a href={proj.url} className="text-xs text-blue-500 underline" target="_blank">Link</a>}
+                                    </div>
+                                    <span className="text-sm text-slate-500 italic">
+                                        {proj.startDate} — {proj.endDate || "Present"}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-slate-700 leading-relaxed">
+                                    {proj.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Skills */}
+            {data.skills && data.skills.length > 0 && (
+                <section className="mb-8">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-100 pb-2">Technical Skills</h3>
+                    <div className="grid grid-cols-2 gap-y-2">
+                        {data.skills.map((skill, index) => (
+                            <div key={index} className="text-sm">
+                                <span className="font-bold text-slate-800">{skill.name}:</span> <span className="text-slate-600">{skill.keywords ? skill.keywords.join(", ") : ""}</span>
                             </div>
                         ))}
                     </div>
