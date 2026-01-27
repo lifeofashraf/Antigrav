@@ -110,7 +110,9 @@ app.post('/api/generate-pdf', (req, res) => {
 });
 
 // Catch-All Handler (Serve React App)
-app.get('*', (req, res) => {
+// Catch-All Handler (Serve React App)
+// Fix for Express 5: '*' is no longer valid. Using Regex /.*/ to match all routes.
+app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
