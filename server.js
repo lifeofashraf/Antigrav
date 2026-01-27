@@ -7,6 +7,8 @@ import path from 'path';
 import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { generateTex } from './latexTemplate.js';
+import { randomUUID } from 'crypto';
 
 dotenv.config();
 
@@ -65,15 +67,45 @@ app.post('/api/ai/optimize', async (req, res) => {
 // PDF Generation Endpoint (LaTeX)
 app.post('/api/generate-pdf', (req, res) => {
     const resumeData = req.body;
-    // TODO: Implement proper LaTeX template injection here
-    // For now, checks if system has pdflatex
+    const texContent = generateTex(resumeData);
 
-    exec('pdflatex --version', (error, stdout, stderr) => {
+    // Create Temp Directory
+    const jobId = randomUUID();
+    const tempDir = path.join(__dirname, 'temp', jobId);
+
+    if (!fs.existsSync(path.join(__dirname, 'temp'))) {
+        fs.mkdirSync(path.join(__dirname, 'temp'));
+    }
+    fs.mkdirSync(tempDir);
+
+    const texPath = path.join(tempDir, 'resume.tex');
+    const pdfPath = path.join(tempDir, 'resume.pdf');
+
+    // Write .tex file
+    fs.writeFileSync(texPath, texContent);
+
+    // Compile
+    // Use -interaction=nonstopmode to prevent hanging on errors
+    const cmd = `pdflatex -interaction=nonstopmode -output-directory=${tempDir} ${texPath}`;
+
+    exec(cmd, (error, stdout, stderr) => {
         if (error) {
-            console.error("LaTeX check failed:", error);
-            return res.status(500).json({ error: 'LaTeX environment not found on server' });
+            console.error("LaTeX Compilation Failed:", stdout);
+            // Cleanup on error
+            try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (e) { }
+            return res.status(500).json({ error: 'LaTeX compilation failed', logs: stdout });
         }
-        res.json({ message: "LaTeX environment detected. PDF generation logic coming soon." });
+
+        // Send File
+        if (fs.existsSync(pdfPath)) {
+            res.sendFile(pdfPath, {}, (err) => {
+                // Cleanup after send
+                try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (e) { }
+            });
+        } else {
+            try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch (e) { }
+            res.status(500).json({ error: 'PDF file was not created' });
+        }
     });
 });
 
