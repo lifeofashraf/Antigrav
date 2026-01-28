@@ -33,7 +33,7 @@ RUN npm install --production
 COPY --from=builder /app/dist ./dist
 
 # Copy backend source code
-COPY server.js .
+COPY server.js latexTemplate.js ./
 
 # Expose port (Render sets PORT env var)
 EXPOSE 3000
