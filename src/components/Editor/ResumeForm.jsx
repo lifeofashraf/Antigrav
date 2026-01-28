@@ -2,30 +2,59 @@ import React, { useState } from 'react';
 import { initialResumeData } from '../../consts/initialData';
 import { Input } from '../ui/Input';
 import { Label } from '../ui/Label';
+import { Button } from '../ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import WorkExperienceFunc from './WorkExperience';
 import EducationFunc from './EducationComponent';
 import SkillsFunc from './SkillsComponent';
 import ProjectsFunc from './ProjectsComponent';
 import AITextArea from '../ui/AITextArea';
+import ImportResumeModal from '../ui/ImportResumeModal';
+import { Upload } from 'lucide-react';
 
 const ResumeForm = ({ onUpdate }) => {
     const [data, setData] = useState(initialResumeData);
+    const [showImportModal, setShowImportModal] = useState(false);
 
     const handleChange = (section, field, value) => {
         const newData = { ...data };
         if (section === 'basics') {
             newData.basics[field] = value;
         } else {
-            newData[section] = value; // Handle root level arrays like 'work', 'education'
+            newData[section] = value;
         }
 
         setData(newData);
         if (onUpdate) onUpdate(newData);
     };
 
+    const handleImport = (importedData) => {
+        // Merge imported data with defaults to ensure all fields exist
+        const mergedData = {
+            ...initialResumeData,
+            ...importedData,
+            basics: { ...initialResumeData.basics, ...importedData.basics }
+        };
+        setData(mergedData);
+        if (onUpdate) onUpdate(mergedData);
+    };
+
     return (
         <div className="space-y-8 max-w-2xl mx-auto pb-20">
+            {/* Import Modal */}
+            <ImportResumeModal
+                isOpen={showImportModal}
+                onClose={() => setShowImportModal(false)}
+                onImport={handleImport}
+            />
+
+            {/* Import Button */}
+            <div className="flex justify-end">
+                <Button variant="outline" onClick={() => setShowImportModal(true)}>
+                    <Upload className="w-4 h-4 mr-2" /> Import Existing Resume
+                </Button>
+            </div>
+
             {/* Personal Details */}
             <Card>
                 <CardHeader>

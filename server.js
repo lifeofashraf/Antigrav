@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { generateTex } from './latexTemplate.js';
 import { randomUUID } from 'crypto';
+import multer from 'multer';
+import pdf from 'pdf-parse';
 
 dotenv.config();
 
@@ -18,9 +20,22 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Multer config for PDF uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PDF files are allowed'), false);
+        }
+    }
+});
+
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // AI Service (Groq)
@@ -33,6 +48,78 @@ const groq = process.env.GROQ_API_KEY ? new Groq({
 // Health Check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date() });
+});
+
+// Parse Resume from Text/PDF using AI
+app.post('/api/ai/parse-resume', upload.single('pdf'), async (req, res) => {
+    if (!groq) {
+        return res.status(503).json({ error: 'Groq API Key not configured' });
+    }
+
+    let resumeText = req.body.text || '';
+
+    // If PDF uploaded, extract text
+    if (req.file) {
+        try {
+            const pdfData = await pdf(req.file.buffer);
+            resumeText = pdfData.text;
+        } catch (err) {
+            console.error("PDF Parse Error:", err);
+            return res.status(400).json({ error: 'Failed to parse PDF file' });
+        }
+    }
+
+    if (!resumeText.trim()) {
+        return res.status(400).json({ error: 'No resume text provided' });
+    }
+
+    const extractionPrompt = `You are an expert resume parser. Extract structured data from the following resume text and return it as valid JSON matching this exact schema:
+
+{
+  "basics": {
+    "name": "string",
+    "label": "string (job title)",
+    "email": "string",
+    "phone": "string",
+    "summary": "string",
+    "location": { "city": "string", "countryCode": "string" }
+  },
+  "work": [{ "name": "string (company)", "position": "string", "startDate": "string", "endDate": "string", "summary": "string" }],
+  "education": [{ "institution": "string", "studyType": "string", "area": "string", "startDate": "string", "endDate": "string" }],
+  "skills": [{ "name": "string (category)", "keywords": ["string"] }],
+  "projects": [{ "name": "string", "description": "string", "url": "string" }]
+}
+
+Return ONLY the JSON object, no markdown, no explanation.
+
+RESUME TEXT:
+${resumeText.substring(0, 8000)}`;
+
+    try {
+        const completion = await groq.chat.completions.create({
+            messages: [{ role: "user", content: extractionPrompt }],
+            model: "mixtral-8x7b-32768",
+            max_tokens: 2000,
+        });
+
+        const responseText = completion.choices[0]?.message?.content || "{}";
+
+        // Try to parse the JSON response
+        let parsed;
+        try {
+            // Clean up potential markdown code blocks
+            const cleanJson = responseText.replace(/```json\n?|\n?```/g, '').trim();
+            parsed = JSON.parse(cleanJson);
+        } catch (parseErr) {
+            console.error("JSON Parse Error:", parseErr, responseText);
+            return res.status(500).json({ error: 'AI returned invalid JSON', raw: responseText });
+        }
+
+        res.json({ resumeData: parsed });
+    } catch (error) {
+        console.error("Groq Parse Error:", error);
+        res.status(500).json({ error: 'AI parsing failed' });
+    }
 });
 
 // AI Optimization Endpoint
