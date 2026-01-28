@@ -4,6 +4,7 @@ import EditorLayout from './components/Editor/EditorLayout';
 import ResumeForm from './components/Editor/ResumeForm';
 import PDFPreview from './components/Editor/PDFPreview';
 import { initialResumeData } from './consts/initialData';
+import ChatBot from './components/ui/ChatBot';
 
 function App() {
   return (
@@ -22,9 +23,12 @@ const EditorPage = () => {
   const [resumeData, setResumeData] = useState(initialResumeData);
 
   return (
-    <EditorLayout preview={<PDFPreview data={resumeData} />}>
-      <ResumeForm onUpdate={setResumeData} />
-    </EditorLayout>
+    <>
+      <EditorLayout preview={<PDFPreview data={resumeData} />}>
+        <ResumeForm onUpdate={setResumeData} />
+      </EditorLayout>
+      <ChatBot resumeData={resumeData} />
+    </>
   );
 };
 

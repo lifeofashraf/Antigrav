@@ -64,6 +64,47 @@ app.post('/api/ai/optimize', async (req, res) => {
     }
 });
 
+// AI Chatbot Endpoint (Conversational)
+app.post('/api/ai/chat', async (req, res) => {
+    if (!groq) {
+        return res.status(503).json({ error: 'Groq API Key not configured' });
+    }
+    const { messages, resumeContext } = req.body;
+
+    // Build system prompt with resume context
+    const systemPrompt = `You are "ResumeBot", a friendly AI assistant helping users build professional resumes.
+
+CURRENT RESUME DATA:
+${resumeContext ? JSON.stringify(resumeContext, null, 2) : "No resume data yet."}
+
+YOUR ROLE:
+- Guide users through resume building
+- Suggest improvements to their content
+- Answer questions about resume best practices
+- Be encouraging and professional
+- Keep responses concise (2-3 sentences max unless asked for detail)
+- When suggesting text, format it clearly so they can copy it`;
+
+    try {
+        const completion = await groq.chat.completions.create({
+            messages: [
+                { role: "system", content: systemPrompt },
+                ...messages
+            ],
+            model: "mixtral-8x7b-32768",
+            max_tokens: 500,
+        });
+
+        res.json({
+            reply: completion.choices[0]?.message?.content || "I couldn't generate a response.",
+            role: "assistant"
+        });
+    } catch (error) {
+        console.error("Groq Chat Error:", error);
+        res.status(500).json({ error: 'AI chat failed' });
+    }
+});
+
 // PDF Generation Endpoint (LaTeX)
 app.post('/api/generate-pdf', (req, res) => {
     const resumeData = req.body;
