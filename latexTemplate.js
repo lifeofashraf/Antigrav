@@ -1,100 +1,157 @@
+/**
+ * LaTeX Resume Template Generator
+ * ATS-friendly, clean output with standard packages only
+ */
 
 const escapeLatex = (str) => {
     if (!str) return "";
     return String(str)
         .replace(/\\/g, '\\textbackslash{}')
+        .replace(/&/g, '\\&')
+        .replace(/%/g, '\\%')
+        .replace(/\$/g, '\\$')
+        .replace(/#/g, '\\#')
+        .replace(/_/g, '\\_')
         .replace(/\{/g, '\\{')
         .replace(/\}/g, '\\}')
-        .replace(/\$/g, '\\$')
-        .replace(/&/g, '\\&')
-        .replace(/#/g, '\\#')
-        .replace(/\^/g, '\\textasciicircum{}')
-        .replace(/_/g, '\\_')
         .replace(/~/g, '\\textasciitilde{}')
-        .replace(/%/g, '\\%');
+        .replace(/\^/g, '\\textasciicircum{}')
+        .replace(/</g, '\\textless{}')
+        .replace(/>/g, '\\textgreater{}');
 };
 
 export const generateTex = (data) => {
-    const { basics, work, education, skills } = data;
+    const { basics = {}, work = [], education = [], skills = [], projects = [] } = data || {};
 
-    return `
-\\documentclass[a4paper,10pt]{article}
+    const name = escapeLatex(basics.name || "Your Name");
+    const label = escapeLatex(basics.label || "");
+    const email = basics.email ? escapeLatex(basics.email) : "";
+    const phone = basics.phone ? escapeLatex(basics.phone) : "";
+    const city = basics.location?.city ? escapeLatex(basics.location.city) : "";
+    const country = basics.location?.countryCode ? escapeLatex(basics.location.countryCode) : "";
+    const summary = basics.summary ? escapeLatex(basics.summary) : "";
+
+    // Build contact line
+    const contactParts = [];
+    if (email) contactParts.push(email);
+    if (phone) contactParts.push(phone);
+    if (city) contactParts.push(city + (country ? `, ${country}` : ""));
+    const contactLine = contactParts.join(" \\textbar{} ");
+
+    // Work Experience Section
+    let workSection = "";
+    if (work && work.length > 0) {
+        const workItems = work.map(job => {
+            const position = escapeLatex(job.position || "");
+            const company = escapeLatex(job.name || "");
+            const startDate = escapeLatex(job.startDate || "");
+            const endDate = escapeLatex(job.endDate || "Present");
+            const jobSummary = escapeLatex(job.summary || "");
+
+            let highlights = "";
+            if (job.highlights && job.highlights.length > 0) {
+                highlights = job.highlights.map(h => `    \\item ${escapeLatex(h)}`).join("\n");
+            } else if (jobSummary) {
+                highlights = `    \\item ${jobSummary}`;
+            }
+
+            return `\\textbf{${position}} \\hfill ${startDate} -- ${endDate} \\\\
+\\textit{${company}}
+${highlights ? `\\begin{itemize}[leftmargin=0.5cm, topsep=0pt, parsep=0pt, itemsep=2pt]
+${highlights}
+\\end{itemize}` : ""}`;
+        }).join("\n\\vspace{0.3cm}\n");
+
+        workSection = `\\section*{Experience}
+${workItems}`;
+    }
+
+    // Education Section
+    let eduSection = "";
+    if (education && education.length > 0) {
+        const eduItems = education.map(edu => {
+            const institution = escapeLatex(edu.institution || "");
+            const degree = escapeLatex(edu.studyType || "");
+            const field = escapeLatex(edu.area || "");
+            const startDate = escapeLatex(edu.startDate || "");
+            const endDate = escapeLatex(edu.endDate || "Present");
+
+            return `\\textbf{${institution}} \\hfill ${startDate} -- ${endDate} \\\\
+\\textit{${degree}${degree && field ? " in " : ""}${field}}`;
+        }).join("\n\\vspace{0.2cm}\n");
+
+        eduSection = `\\section*{Education}
+${eduItems}`;
+    }
+
+    // Skills Section
+    let skillsSection = "";
+    if (skills && skills.length > 0) {
+        const skillItems = skills.map(skill => {
+            const skillName = escapeLatex(skill.name || "");
+            const keywords = skill.keywords ? skill.keywords.map(k => escapeLatex(k)).join(", ") : "";
+            return `\\textbf{${skillName}:} ${keywords}`;
+        }).join(" \\\\\n");
+
+        skillsSection = `\\section*{Skills}
+${skillItems}`;
+    }
+
+    // Projects Section
+    let projectsSection = "";
+    if (projects && projects.length > 0) {
+        const projectItems = projects.map(proj => {
+            const projName = escapeLatex(proj.name || "");
+            const projDesc = escapeLatex(proj.description || "");
+            const startDate = escapeLatex(proj.startDate || "");
+            const endDate = escapeLatex(proj.endDate || "");
+            const dateRange = startDate ? ` \\hfill ${startDate}${endDate ? ` -- ${endDate}` : ""}` : "";
+
+            return `\\textbf{${projName}}${dateRange} \\\\
+${projDesc}`;
+        }).join("\n\\vspace{0.2cm}\n");
+
+        projectsSection = `\\section*{Projects}
+${projectItems}`;
+    }
+
+    return `\\documentclass[11pt,a4paper]{article}
+
+% --- PACKAGES ---
 \\usepackage[utf8]{inputenc}
-\\usepackage[empty]{fullpage}
-\\usepackage{titlesec}
+\\usepackage[T1]{fontenc}
+\\usepackage{lmodern}
+\\usepackage[margin=1.5cm]{geometry}
 \\usepackage{enumitem}
+\\usepackage{parskip}
 \\usepackage[hidelinks]{hyperref}
-\\usepackage{geometry}
-\\usepackage{fontawesome5}
 
-\\geometry{left=1.5cm, top=1.5cm, right=1.5cm, bottom=1.5cm}
-
-\\titleformat{\\section}{\\large\\bfseries\\uppercase}{}{0em}{}[\\titlerule]
+% --- FORMATTING ---
+\\pagestyle{empty}
+\\setlength{\\parindent}{0pt}
+\\renewcommand{\\section}[1]{\\vspace{0.4cm}{\\large\\bfseries\\MakeUppercase{#1}}\\vspace{0.2cm}\\hrule\\vspace{0.3cm}}
 
 \\begin{document}
 
 % --- HEADER ---
 \\begin{center}
-    {\\Huge\\textbf{${escapeLatex(basics.name || "Your Name")}}} \\\\
-    \\vspace{2mm}
-    {\\large ${escapeLatex(basics.label || "")}} \\\\
-    \\vspace{2mm}
-    \\small
-    ${basics.email ? `\\faEnvelope\\ ${escapeLatex(basics.email)}` : ""} 
-    ${basics.phone ? `\\ $|$\\ \\faPhone\\ ${escapeLatex(basics.phone)}` : ""}
-    ${basics.location?.city ? `\\ $|$\\ \\faMapMarker*\\ ${escapeLatex(basics.location.city)}` : ""}
-    ${basics.url ? `\\ $|$\\ \\faGlobe\\ \\href{${basics.url}}{${escapeLatex(basics.url)}}` : ""}
+{\\LARGE\\textbf{${name}}}${label ? ` \\\\ \\vspace{0.1cm} {\\large ${label}}` : ""}
+\\vspace{0.2cm}
+
+${contactLine ? `{\\small ${contactLine}}` : ""}
 \\end{center}
 
-% --- SUMMARY ---
-${basics.summary ? `
-\\section{Summary}
-${escapeLatex(basics.summary)}
-\\vspace{3mm}
+${summary ? `\\section*{Summary}
+${summary}
 ` : ""}
+${workSection}
 
-% --- EXPERIENCE ---
-${work && work.length > 0 ? `
-\\section{Experience}
-\\begin{itemize}[leftmargin=0in, label={}]
-    ${work.map(job => `
-    \\item
-        \\begin{tabular*}{0.98\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
-            \\textbf{${escapeLatex(job.position)}} & \\textit{${escapeLatex(job.startDate)} -- ${escapeLatex(job.endDate || "Present")}} \\\\
-            \\textit{${escapeLatex(job.name)}} & 
-        \\end{tabular*}\\vspace{-5pt}
-        \\begin{itemize}[leftmargin=0.2in]
-            ${job.summary ? `\\item ${escapeLatex(job.summary)}` : ""}
-            ${job.highlights && job.highlights.length > 0 ? job.highlights.map(h => `\\item ${escapeLatex(h)}`).join('\n') : ""}
-        \\end{itemize}
-    `).join('\n')}
-\\end{itemize}
-` : ""}
+${eduSection}
 
-% --- EDUCATION ---
-${education && education.length > 0 ? `
-\\section{Education}
-\\begin{itemize}[leftmargin=0in, label={}]
-    ${education.map(edu => `
-    \\item
-        \\begin{tabular*}{0.98\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
-            \\textbf{${escapeLatex(edu.institution)}} & \\textit{${escapeLatex(edu.startDate)} -- ${escapeLatex(edu.endDate || "Present")}} \\\\
-            \\textit{${escapeLatex(edu.studyType)} in ${escapeLatex(edu.area)}} & 
-        \\end{tabular*}
-    `).join('\n')}
-\\end{itemize}
-` : ""}
+${skillsSection}
 
-% --- SKILLS ---
-${skills && skills.length > 0 ? `
-\\section{Technical Skills}
-\\begin{itemize}[leftmargin=0.2in, label={}]
-    \\small{\\item{
-     ${skills.map(s => `\\textbf{${escapeLatex(s.name)}}: ${s.keywords ? s.keywords.map(k => escapeLatex(k)).join(", ") : ""}`).join(" \\\\ ")}
-    }}
-\\end{itemize}
-` : ""}
+${projectsSection}
 
 \\end{document}
-    `;
+`;
 };

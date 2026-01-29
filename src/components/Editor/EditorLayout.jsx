@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Download, Save, Loader2 } from 'lucide-react';
 
-const EditorLayout = ({ children, preview, onExportPDF }) => {
+const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
     const [isExporting, setIsExporting] = useState(false);
 
     const handleExport = async () => {
@@ -50,7 +50,7 @@ const EditorLayout = ({ children, preview, onExportPDF }) => {
                     </Button>
                 </header>
                 <div className="flex-1 overflow-y-auto p-8 flex justify-center">
-                    <div className="w-[210mm] min-h-[297mm] bg-white shadow-2xl origin-top transform scale-90 mb-10">
+                    <div ref={previewRef} className="w-[210mm] min-h-[297mm] bg-white shadow-2xl origin-top transform scale-90 mb-10">
                         {preview}
                     </div>
                 </div>

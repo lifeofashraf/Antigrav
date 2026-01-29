@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import EditorLayout from './components/Editor/EditorLayout';
 import ResumeForm from './components/Editor/ResumeForm';
 import PDFPreview from './components/Editor/PDFPreview';
@@ -21,30 +23,45 @@ function App() {
 
 const EditorPage = () => {
   const [resumeData, setResumeData] = useState(initialResumeData);
+  const previewRef = useRef(null);
 
   const handleExportPDF = async () => {
+    if (!previewRef.current) {
+      alert('Preview not ready');
+      return;
+    }
+
     try {
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(resumeData),
+      // Capture the preview element at high resolution
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to generate PDF');
-      }
+      // A4 dimensions in mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
 
-      // Download the PDF
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${resumeData.basics?.name || 'resume'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Calculate scaling to fit A4
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // Add image to PDF
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
+
+      // Download
+      const fileName = `${resumeData.basics?.name?.replace(/[^a-z0-9]/gi, '_') || 'resume'}.pdf`;
+      pdf.save(fileName);
     } catch (error) {
       console.error('Export failed:', error);
       alert(`Export failed: ${error.message}`);
@@ -53,7 +70,11 @@ const EditorPage = () => {
 
   return (
     <>
-      <EditorLayout preview={<PDFPreview data={resumeData} />} onExportPDF={handleExportPDF}>
+      <EditorLayout
+        preview={<PDFPreview data={resumeData} />}
+        onExportPDF={handleExportPDF}
+        previewRef={previewRef}
+      >
         <ResumeForm onUpdate={setResumeData} />
       </EditorLayout>
       <ChatBot resumeData={resumeData} />
