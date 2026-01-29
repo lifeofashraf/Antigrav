@@ -4,10 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
     Home,
     FileText,
-    Settings,
     LogOut,
     ChevronLeft,
-    ChevronRight,
     User,
     PenTool
 } from 'lucide-react';
@@ -38,6 +36,7 @@ const Sidebar = () => {
         <motion.aside
             initial={false}
             animate={{ width: isCollapsed ? 80 : 260 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-50 flex flex-col shadow-sm"
         >
             {/* Header */}
@@ -57,12 +56,19 @@ const Sidebar = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <button
+                <motion.button
                     onClick={() => setIsCollapsed(!isCollapsed)}
                     className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                 >
-                    {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-                </button>
+                    <motion.div
+                        animate={{ rotate: isCollapsed ? 180 : 0 }}
+                        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </motion.div>
+                </motion.button>
             </div>
 
             {/* Navigation */}
@@ -72,8 +78,8 @@ const Sidebar = () => {
                         key={item.path}
                         to={item.path}
                         className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${isActive(item.path)
-                                ? 'bg-indigo-50 text-indigo-600'
-                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            ? 'bg-indigo-50 text-indigo-600'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                     >
                         <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive(item.path) ? 'text-indigo-600' : ''}`} />
