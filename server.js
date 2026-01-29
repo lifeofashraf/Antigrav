@@ -100,7 +100,7 @@ ${resumeText.substring(0, 8000)}`;
     try {
         const completion = await groq.chat.completions.create({
             messages: [{ role: "user", content: extractionPrompt }],
-            model: "mixtral-8x7b-32768",
+            model: "llama-3.3-70b-versatile",
             max_tokens: 2000,
         });
 
@@ -143,7 +143,7 @@ app.post('/api/ai/optimize', async (req, res) => {
                     content: `Section: ${section}\nContent: ${content}`
                 }
             ],
-            model: "mixtral-8x7b-32768",
+            model: "llama-3.3-70b-versatile",
         });
 
         res.json({ suggestedContent: completion.choices[0]?.message?.content || "" });
@@ -180,7 +180,7 @@ YOUR ROLE:
                 { role: "system", content: systemPrompt },
                 ...messages
             ],
-            model: "mixtral-8x7b-32768",
+            model: "llama-3.3-70b-versatile",
             max_tokens: 500,
         });
 
