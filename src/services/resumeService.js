@@ -7,7 +7,6 @@ import {
     deleteDoc,
     query,
     where,
-    orderBy,
     serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -64,14 +63,22 @@ export const getResume = async (resumeId) => {
 export const getUserResumes = async (userId) => {
     if (!db) return [];
 
+    // Note: Using only where() to avoid requiring a composite index
+    // We sort client-side instead
     const q = query(
         collection(db, RESUMES_COLLECTION),
-        where('userId', '==', userId),
-        orderBy('updatedAt', 'desc')
+        where('userId', '==', userId)
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const resumes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Sort by updatedAt descending (newest first)
+    return resumes.sort((a, b) => {
+        const aTime = a.updatedAt?.toMillis?.() || 0;
+        const bTime = b.updatedAt?.toMillis?.() || 0;
+        return bTime - aTime;
+    });
 };
 
 /**
