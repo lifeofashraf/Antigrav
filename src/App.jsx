@@ -55,8 +55,20 @@ const EditorPage = () => {
       const imgWidth = pdfWidth;
       const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      // Add image to PDF
-      pdf.addImage(dataUrl, 'JPEG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(dataUrl, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Add subsequent pages if content overflows
+      while (heightLeft > 0) {
+        position -= pdfHeight; // Move image up by one page height
+        pdf.addPage();
+        pdf.addImage(dataUrl, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
 
       // Download
       const fileName = `${resumeData.basics?.name?.replace(/[^a-z0-9]/gi, '_') || 'resume'}.pdf`;
