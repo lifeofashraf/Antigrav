@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import { toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -8,19 +8,43 @@ import PDFPreview from './components/Editor/PDFPreview';
 import { initialResumeData } from './consts/initialData';
 import ChatBot from './components/ui/ChatBot';
 import Home from './components/Home';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/editor" element={<EditorPage />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/editor" element={<EditorPage />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
+
+const PrivateRoute = ({ children }) => {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  return currentUser ? children : <Navigate to="/login" />;
+};
 
 const EditorPage = () => {
   const [resumeData, setResumeData] = useState(initialResumeData);

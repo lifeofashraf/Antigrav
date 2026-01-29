@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, FileText, Download, Wand2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, FileText, Download, Wand2, CheckCircle2, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
     const targetRef = useRef(null);
+    const { currentUser } = useAuth();
     const { scrollYProgress } = useScroll({
         target: targetRef,
         offset: ["start start", "end start"]
@@ -16,6 +18,26 @@ const Home = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-500/30">
+            {/* Nav */}
+            <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center backdrop-blur-sm bg-slate-50/50 border-b border-transparent hover:border-slate-200 transition-colors">
+                <div className="font-bold text-xl tracking-tight text-slate-900">Resumate.</div>
+                <div className="flex gap-4">
+                    {currentUser ? (
+                        <Link to="/dashboard">
+                            <button className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+                                <User className="w-4 h-4" /> Dashboard
+                            </button>
+                        </Link>
+                    ) : (
+                        <Link to="/login">
+                            <button className="px-4 py-2 text-slate-600 font-medium hover:text-indigo-600 transition">
+                                Sign In
+                            </button>
+                        </Link>
+                    )}
+                </div>
+            </nav>
+
             {/* Background Gradients */}
             <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/20 rounded-full blur-[120px] animate-blob" />
@@ -38,7 +60,7 @@ const Home = () => {
                             v1.0 Public Beta
                         </span>
                         <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-8 bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-800 bg-clip-text text-transparent">
-                            Antigravity.
+                            Resumate.
                         </h1>
                         <p className="text-xl md:text-2xl text-slate-600 mb-10 leading-relaxed max-w-2xl mx-auto">
                             Build a <span className="text-indigo-600 font-semibold">deterministic</span> setup for your career.
@@ -115,7 +137,7 @@ const Home = () => {
                         viewport={{ once: true }}
                         className="mt-32 text-center"
                     >
-                        <h2 className="text-4xl font-bold mb-12 text-slate-800">Why Antigravity?</h2>
+                        <h2 className="text-4xl font-bold mb-12 text-slate-800">Why Resumate?</h2>
                         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto text-left">
                             <CheckItem text="No more fighting with Word margins" />
                             <CheckItem text="Automated ATS keyword optimization" />
@@ -126,7 +148,7 @@ const Home = () => {
                 </div>
 
                 <footer className="py-10 text-center text-slate-500 text-sm border-t border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                    © 2026 Antigravity. Built for builders.
+                    © 2026 Resumate. Built for builders.
                 </footer>
             </div>
         </div>

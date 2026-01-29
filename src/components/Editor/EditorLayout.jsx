@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Download, Save, Loader2 } from 'lucide-react';
 
+import { Link } from 'react-router-dom';
+
 const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
     const [isExporting, setIsExporting] = useState(false);
 
@@ -20,9 +22,11 @@ const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
             {/* Left Sidebar: Form Editor */}
             <div className="w-1/2 flex flex-col border-r border-slate-200 bg-white h-full relative z-10 shadow-xl">
                 <header className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                        Resume Builder
-                    </h1>
+                    <Link to="/">
+                        <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+                            Resumate
+                        </h1>
+                    </Link>
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm">
                             <Save className="w-4 h-4 mr-2" />
