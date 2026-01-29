@@ -4,7 +4,7 @@ const PDFPreview = ({ data }) => {
     if (!data) return null;
 
     return (
-        <div className="p-16 h-full text-slate-900 font-serif overflow-hidden">
+        <div className="p-16 text-slate-900 font-serif">
             {/* Header */}
             <header className="border-b-2 border-slate-900 pb-6 mb-6">
                 <h1 className="text-4xl font-bold uppercase tracking-tight mb-2">{data.basics.name || "Your Name"}</h1>

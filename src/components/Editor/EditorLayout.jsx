@@ -50,8 +50,10 @@ const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
                     </Button>
                 </header>
                 <div className="flex-1 overflow-y-auto p-8 flex justify-center">
-                    <div ref={previewRef} className="w-[210mm] min-h-[297mm] bg-white shadow-2xl origin-top transform scale-90 mb-10">
-                        {preview}
+                    <div className="max-w-fit origin-top transform scale-90 mb-10">
+                        <div ref={previewRef} className="w-[210mm] min-h-[297mm] bg-white shadow-2xl">
+                            {preview}
+                        </div>
                     </div>
                 </div>
             </div>
