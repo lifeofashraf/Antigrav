@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/Button';
-import { Download, Save } from 'lucide-react';
+import { Download, Save, Loader2 } from 'lucide-react';
 
-const EditorLayout = ({ children, preview }) => {
+const EditorLayout = ({ children, preview, onExportPDF }) => {
+    const [isExporting, setIsExporting] = useState(false);
+
+    const handleExport = async () => {
+        if (isExporting) return;
+        setIsExporting(true);
+        try {
+            await onExportPDF?.();
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <div className="flex h-screen bg-slate-50 overflow-hidden">
             {/* Left Sidebar: Form Editor */}
@@ -28,9 +40,13 @@ const EditorLayout = ({ children, preview }) => {
             <div className="w-1/2 flex flex-col h-full bg-slate-100/50">
                 <header className="px-6 py-4 border-b border-slate-200/50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
                     <span className="text-sm font-medium text-slate-500">Live Preview</span>
-                    <Button size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Export PDF
+                    <Button size="sm" onClick={handleExport} disabled={isExporting}>
+                        {isExporting ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                            <Download className="w-4 h-4 mr-2" />
+                        )}
+                        {isExporting ? 'Exporting...' : 'Export PDF'}
                     </Button>
                 </header>
                 <div className="flex-1 overflow-y-auto p-8 flex justify-center">
@@ -44,3 +60,4 @@ const EditorLayout = ({ children, preview }) => {
 };
 
 export default EditorLayout;
+

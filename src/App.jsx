@@ -22,9 +22,38 @@ function App() {
 const EditorPage = () => {
   const [resumeData, setResumeData] = useState(initialResumeData);
 
+  const handleExportPDF = async () => {
+    try {
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resumeData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      // Download the PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${resumeData.basics?.name || 'resume'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert(`Export failed: ${error.message}`);
+    }
+  };
+
   return (
     <>
-      <EditorLayout preview={<PDFPreview data={resumeData} />}>
+      <EditorLayout preview={<PDFPreview data={resumeData} />} onExportPDF={handleExportPDF}>
         <ResumeForm onUpdate={setResumeData} />
       </EditorLayout>
       <ChatBot resumeData={resumeData} />
