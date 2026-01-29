@@ -7,6 +7,7 @@ import ResumeForm from './components/Editor/ResumeForm';
 import PDFPreview from './components/Editor/PDFPreview';
 import { initialResumeData } from './consts/initialData';
 import ChatBot from './components/ui/ChatBot';
+import Home from './components/Home';
 
 function App() {
   return (
@@ -92,19 +93,5 @@ const EditorPage = () => {
     </>
   );
 };
-
-const Home = () => (
-  <div className="p-10 flex flex-col items-center justify-center min-h-[80vh] text-center">
-    <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent mb-6">
-      Antigravity Resume
-    </h1>
-    <p className="mb-8 text-xl text-slate-600 max-w-2xl">
-      Build a premium, deterministic resume utilizing LaTeX reliability and AI-enhanced content optimization.
-    </p>
-    <a href="/editor" className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/30">
-      Launch Editor
-    </a>
-  </div>
-);
 
 export default App;
