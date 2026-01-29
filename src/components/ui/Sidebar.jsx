@@ -11,6 +11,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Shared transition config for perfect sync
+const sidebarTransition = {
+    duration: 0.25,
+    ease: [0.4, 0, 0.2, 1] // Material design easing
+};
+
 const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const { currentUser, logout } = useAuth();
@@ -34,19 +40,19 @@ const Sidebar = () => {
 
     return (
         <motion.aside
-            initial={false}
             animate={{ width: isCollapsed ? 80 : 260 }}
-            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={sidebarTransition}
             className="fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-50 flex flex-col shadow-sm"
         >
             {/* Header */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between min-h-[65px]">
                 <AnimatePresence mode="wait">
                     {!isCollapsed && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
                         >
                             <Link to="/">
                                 <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
@@ -58,13 +64,13 @@ const Sidebar = () => {
                 </AnimatePresence>
                 <motion.button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
                     <motion.div
                         animate={{ rotate: isCollapsed ? 180 : 0 }}
-                        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        transition={sidebarTransition}
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </motion.div>
@@ -72,29 +78,27 @@ const Sidebar = () => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-3 space-y-1">
+            <nav className="flex-1 p-3 space-y-1 overflow-hidden">
                 {navItems.map((item) => (
                     <Link
                         key={item.path}
                         to={item.path}
-                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${isActive(item.path)
-                            ? 'bg-indigo-50 text-indigo-600'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${isActive(item.path)
+                                ? 'bg-indigo-50 text-indigo-600'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                     >
                         <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive(item.path) ? 'text-indigo-600' : ''}`} />
-                        <AnimatePresence mode="wait">
-                            {!isCollapsed && (
-                                <motion.span
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    className="font-medium whitespace-nowrap"
-                                >
-                                    {item.label}
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
+                        <motion.span
+                            animate={{
+                                opacity: isCollapsed ? 0 : 1,
+                                x: isCollapsed ? -10 : 0
+                            }}
+                            transition={sidebarTransition}
+                            className="font-medium whitespace-nowrap overflow-hidden"
+                        >
+                            {item.label}
+                        </motion.span>
                     </Link>
                 ))}
             </nav>
@@ -114,23 +118,21 @@ const Sidebar = () => {
                                 <User className="w-4 h-4 text-indigo-600" />
                             </div>
                         )}
-                        <AnimatePresence mode="wait">
-                            {!isCollapsed && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="flex-1 min-w-0"
-                                >
-                                    <p className="text-sm font-medium text-slate-800 truncate">
-                                        {currentUser.displayName || 'User'}
-                                    </p>
-                                    <p className="text-xs text-slate-400 truncate">
-                                        {currentUser.email}
-                                    </p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        <motion.div
+                            animate={{
+                                opacity: isCollapsed ? 0 : 1,
+                                width: isCollapsed ? 0 : 'auto'
+                            }}
+                            transition={sidebarTransition}
+                            className="flex-1 min-w-0 overflow-hidden"
+                        >
+                            <p className="text-sm font-medium text-slate-800 truncate">
+                                {currentUser.displayName || 'User'}
+                            </p>
+                            <p className="text-xs text-slate-400 truncate">
+                                {currentUser.email}
+                            </p>
+                        </motion.div>
                     </div>
                     <button
                         onClick={handleLogout}
@@ -138,18 +140,16 @@ const Sidebar = () => {
                             }`}
                     >
                         <LogOut className="w-5 h-5 flex-shrink-0" />
-                        <AnimatePresence mode="wait">
-                            {!isCollapsed && (
-                                <motion.span
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="font-medium"
-                                >
-                                    Sign Out
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
+                        <motion.span
+                            animate={{
+                                opacity: isCollapsed ? 0 : 1,
+                                x: isCollapsed ? -10 : 0
+                            }}
+                            transition={sidebarTransition}
+                            className="font-medium overflow-hidden"
+                        >
+                            Sign Out
+                        </motion.span>
                     </button>
                 </div>
             )}
@@ -163,18 +163,16 @@ const Sidebar = () => {
                             }`}
                     >
                         <User className="w-5 h-5 flex-shrink-0" />
-                        <AnimatePresence mode="wait">
-                            {!isCollapsed && (
-                                <motion.span
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="font-medium"
-                                >
-                                    Sign In
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
+                        <motion.span
+                            animate={{
+                                opacity: isCollapsed ? 0 : 1,
+                                x: isCollapsed ? -10 : 0
+                            }}
+                            transition={sidebarTransition}
+                            className="font-medium overflow-hidden"
+                        >
+                            Sign In
+                        </motion.span>
                     </Link>
                 </div>
             )}
