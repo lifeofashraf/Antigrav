@@ -5,6 +5,7 @@ import { Plus, FileText, Trash2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getUserResumes, deleteResume } from '../services/resumeService';
 import Layout from '../components/ui/Layout';
+import { pageVariants, staggerContainerVariants, staggerItemVariants, cardHoverVariants } from '../utils/animations';
 
 const Dashboard = () => {
     const { currentUser } = useAuth();
@@ -53,75 +54,107 @@ const Dashboard = () => {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-slate-50 font-sans">
+            <motion.div
+                className="min-h-screen bg-slate-50 font-sans"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+            >
                 <main className="max-w-6xl mx-auto p-8">
-                    <div className="flex justify-between items-end mb-10">
-                        <div>
+                    <motion.div
+                        className="flex justify-between items-end mb-10"
+                        variants={staggerContainerVariants}
+                        initial="initial"
+                        animate="animate"
+                    >
+                        <motion.div variants={staggerItemVariants}>
                             <h2 className="text-3xl font-bold text-slate-800 mb-2">My Resumes</h2>
                             <p className="text-slate-500">Manage and edit your career documents.</p>
-                        </div>
-                        <Link to="/editor">
-                            <button className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 flex items-center gap-2">
-                                <Plus className="w-5 h-5" /> Create New
-                            </button>
-                        </Link>
-                    </div>
+                        </motion.div>
+                        <motion.div variants={staggerItemVariants}>
+                            <Link to="/editor">
+                                <motion.button
+                                    className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 flex items-center gap-2"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    <Plus className="w-5 h-5" /> Create New
+                                </motion.button>
+                            </Link>
+                        </motion.div>
+                    </motion.div>
 
                     {loading ? (
-                        <div className="flex items-center justify-center py-20">
+                        <motion.div
+                            className="flex items-center justify-center py-20"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                        >
                             <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-                        </div>
+                        </motion.div>
                     ) : (
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <motion.div
+                            className="grid md:grid-cols-3 gap-6"
+                            variants={staggerContainerVariants}
+                            initial="initial"
+                            animate="animate"
+                        >
                             {/* Create New Card */}
-                            <Link to="/editor">
-                                <motion.div
-                                    whileHover={{ y: -5 }}
-                                    className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full flex flex-col items-center justify-center text-center min-h-[200px] border-dashed border-2 border-slate-300 hover:border-indigo-400"
-                                >
-                                    <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <Plus className="w-6 h-6" />
-                                    </div>
-                                    <h3 className="font-bold text-lg text-slate-700 mb-1">Create New Resume</h3>
-                                    <p className="text-sm text-slate-400">Start from scratch</p>
-                                </motion.div>
-                            </Link>
+                            <motion.div variants={staggerItemVariants}>
+                                <Link to="/editor">
+                                    <motion.div
+                                        className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm cursor-pointer group h-full flex flex-col items-center justify-center text-center min-h-[200px] border-dashed border-2 border-slate-300 hover:border-indigo-400 transition-colors"
+                                        whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <Plus className="w-6 h-6" />
+                                        </div>
+                                        <h3 className="font-bold text-lg text-slate-700 mb-1">Create New Resume</h3>
+                                        <p className="text-sm text-slate-400">Start from scratch</p>
+                                    </motion.div>
+                                </Link>
+                            </motion.div>
 
                             {/* Saved Resume Cards */}
                             {resumes.map((resume) => (
-                                <Link to={`/editor?id=${resume.id}`} key={resume.id}>
-                                    <motion.div
-                                        whileHover={{ y: -5 }}
-                                        className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full min-h-[200px] relative"
-                                    >
-                                        <button
-                                            onClick={(e) => handleDelete(resume.id, e)}
-                                            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                            title="Delete"
+                                <motion.div key={resume.id} variants={staggerItemVariants}>
+                                    <Link to={`/editor?id=${resume.id}`}>
+                                        <motion.div
+                                            className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm cursor-pointer group h-full min-h-[200px] relative"
+                                            whileHover={{ y: -5, boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                                            transition={{ duration: 0.2 }}
                                         >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
-                                                <FileText className="w-6 h-6" />
+                                            <button
+                                                onClick={(e) => handleDelete(resume.id, e)}
+                                                className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+                                                    <FileText className="w-6 h-6" />
+                                                </div>
                                             </div>
-                                        </div>
-                                        <h3 className="font-bold text-lg text-slate-800 mb-2 truncate">
-                                            {resume.basics?.name || resume.basics?.label || 'Untitled Resume'}
-                                        </h3>
-                                        <p className="text-sm text-slate-500 mb-1">
-                                            {resume.basics?.label || 'No title'}
-                                        </p>
-                                        <p className="text-xs text-slate-400">
-                                            Last edited {formatDate(resume.updatedAt)}
-                                        </p>
-                                    </motion.div>
-                                </Link>
+                                            <h3 className="font-bold text-lg text-slate-800 mb-2 truncate">
+                                                {resume.basics?.name || resume.basics?.label || 'Untitled Resume'}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 mb-1">
+                                                {resume.basics?.label || 'No title'}
+                                            </p>
+                                            <p className="text-xs text-slate-400">
+                                                Last edited {formatDate(resume.updatedAt)}
+                                            </p>
+                                        </motion.div>
+                                    </Link>
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     )}
                 </main>
-            </div>
+            </motion.div>
         </Layout>
     );
 };
