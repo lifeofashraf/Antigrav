@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, useRef } from 'react';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import EditorLayout from './components/Editor/EditorLayout';
 import ResumeForm from './components/Editor/ResumeForm';
@@ -32,12 +32,11 @@ const EditorPage = () => {
     }
 
     try {
-      // Capture the preview element at high resolution
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2, // Higher quality
-        useCORS: true,
-        allowTaint: true,
+      // Capture the preview element using html-to-image (supports oklch/Tailwind v4)
+      const dataUrl = await toJpeg(previewRef.current, {
+        quality: 0.95,
         backgroundColor: '#ffffff',
+        pixelRatio: 2, // Higher resolution
       });
 
       // A4 dimensions in mm
@@ -51,13 +50,13 @@ const EditorPage = () => {
         format: 'a4',
       });
 
-      // Calculate scaling to fit A4
+      // Calculate img dimensions to fit width
+      const imgProps = pdf.getImageProperties(dataUrl);
       const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
       // Add image to PDF
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, imgWidth, Math.min(imgHeight, pdfHeight));
 
       // Download
       const fileName = `${resumeData.basics?.name?.replace(/[^a-z0-9]/gi, '_') || 'resume'}.pdf`;
