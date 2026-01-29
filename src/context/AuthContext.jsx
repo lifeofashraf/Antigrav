@@ -17,21 +17,35 @@ export const AuthProvider = ({ children }) => {
 
     const provider = new GoogleAuthProvider();
 
-    const signInWithGoogle = () => {
-        return signInWithPopup(auth, provider);
+    const signInWithGoogle = async () => {
+        try {
+            return await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error('Sign in failed:', error);
+            throw error;
+        }
     };
 
-    const logout = () => {
-        return signOut(auth);
+    const logout = async () => {
+        try {
+            return await signOut(auth);
+        } catch (error) {
+            console.error('Sign out failed:', error);
+            throw error;
+        }
     };
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setCurrentUser(user);
-            setLoading(false);
-        });
-
-        return unsubscribe;
+        try {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                setCurrentUser(user);
+                setLoading(false);
+            });
+            return unsubscribe;
+        } catch (error) {
+            console.error('Auth state change listener failed:', error);
+            setLoading(false); // Ensure we stop loading even on error
+        }
     }, []);
 
     const value = {
@@ -41,9 +55,10 @@ export const AuthProvider = ({ children }) => {
         loading
     };
 
+    // Always render children - let individual components handle loading state
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };
