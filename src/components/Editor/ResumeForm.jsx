@@ -90,6 +90,14 @@ const ResumeForm = ({ onUpdate }) => {
                         />
                     </div>
                     <div className="space-y-2">
+                        <Label>LinkedIn / Website</Label>
+                        <Input
+                            value={data.basics.url || ''}
+                            onChange={(e) => handleChange('basics', 'url', e.target.value)}
+                            placeholder="https://linkedin.com/in/..."
+                        />
+                    </div>
+                    <div className="space-y-2">
                         <Label>City</Label>
                         <Input
                             value={data.basics.location?.city || ''}
