@@ -18,6 +18,9 @@ export const AuthProvider = ({ children }) => {
     const provider = new GoogleAuthProvider();
 
     const signInWithGoogle = async () => {
+        if (!auth) {
+            throw new Error('Authentication not configured');
+        }
         try {
             return await signInWithPopup(auth, provider);
         } catch (error) {
@@ -27,6 +30,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
+        if (!auth) {
+            return;
+        }
         try {
             return await signOut(auth);
         } catch (error) {
@@ -36,6 +42,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        if (!auth) {
+            console.warn('Firebase auth not available');
+            setLoading(false);
+            return;
+        }
+
         try {
             const unsubscribe = onAuthStateChanged(auth, (user) => {
                 setCurrentUser(user);
@@ -44,7 +56,7 @@ export const AuthProvider = ({ children }) => {
             return unsubscribe;
         } catch (error) {
             console.error('Auth state change listener failed:', error);
-            setLoading(false); // Ensure we stop loading even on error
+            setLoading(false);
         }
     }, []);
 
