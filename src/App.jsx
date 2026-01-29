@@ -48,7 +48,26 @@ const PrivateRoute = ({ children }) => {
 
 const EditorPage = () => {
   const [resumeData, setResumeData] = useState(initialResumeData);
+  const [resumeId, setResumeId] = useState(null);
   const previewRef = useRef(null);
+  const { currentUser } = useAuth();
+
+  const handleSave = async () => {
+    if (!currentUser) {
+      alert('Please sign in to save your resume');
+      return;
+    }
+
+    try {
+      const { saveResume } = await import('./services/resumeService');
+      const savedId = await saveResume(currentUser.uid, resumeData, resumeId);
+      setResumeId(savedId);
+      alert('Resume saved successfully!');
+    } catch (error) {
+      console.error('Save failed:', error);
+      alert(`Save failed: ${error.message}`);
+    }
+  };
 
   const handleExportPDF = async () => {
     if (!previewRef.current) {
@@ -109,6 +128,7 @@ const EditorPage = () => {
       <EditorLayout
         preview={<PDFPreview data={resumeData} />}
         onExportPDF={handleExportPDF}
+        onSave={handleSave}
         previewRef={previewRef}
       >
         <ResumeForm onUpdate={setResumeData} />

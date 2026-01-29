@@ -4,8 +4,9 @@ import { Download, Save, Loader2 } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
 
-const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
+const EditorLayout = ({ children, preview, onExportPDF, onSave, previewRef }) => {
     const [isExporting, setIsExporting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleExport = async () => {
         if (isExporting) return;
@@ -14,6 +15,16 @@ const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
             await onExportPDF?.();
         } finally {
             setIsExporting(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
+        try {
+            await onSave?.();
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -28,9 +39,13 @@ const EditorLayout = ({ children, preview, onExportPDF, previewRef }) => {
                         </h1>
                     </Link>
                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                            <Save className="w-4 h-4 mr-2" />
-                            Save
+                        <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
+                            {isSaving ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                                <Save className="w-4 h-4 mr-2" />
+                            )}
+                            {isSaving ? 'Saving...' : 'Save'}
                         </Button>
                     </div>
                 </header>
