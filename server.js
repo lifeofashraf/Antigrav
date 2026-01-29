@@ -10,7 +10,9 @@ import dotenv from 'dotenv';
 import { generateTex } from './latexTemplate.js';
 import { randomUUID } from 'crypto';
 import multer from 'multer';
-import pdf from 'pdf-parse';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdf = require('pdf-parse');
 
 dotenv.config();
 
@@ -244,7 +246,7 @@ app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
     if (!process.env.GROQ_API_KEY) console.warn("WARNING: GROQ_API_KEY is missing.");
 });
