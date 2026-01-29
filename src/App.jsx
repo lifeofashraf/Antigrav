@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
 import { toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import EditorLayout from './components/Editor/EditorLayout';
@@ -49,8 +49,34 @@ const PrivateRoute = ({ children }) => {
 const EditorPage = () => {
   const [resumeData, setResumeData] = useState(initialResumeData);
   const [resumeId, setResumeId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const previewRef = useRef(null);
   const { currentUser } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Load existing resume if ID is in URL
+  useEffect(() => {
+    const loadResume = async () => {
+      const id = searchParams.get('id');
+      if (!id) return;
+
+      setIsLoading(true);
+      try {
+        const { getResume } = await import('./services/resumeService');
+        const resume = await getResume(id);
+        if (resume) {
+          setResumeData(resume);
+          setResumeId(id);
+        }
+      } catch (error) {
+        console.error('Failed to load resume:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadResume();
+  }, [searchParams]);
 
   const handleSave = async () => {
     if (!currentUser) {

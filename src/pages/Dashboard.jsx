@@ -1,12 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, LogOut, FileText } from 'lucide-react';
+import { Plus, LogOut, FileText, Trash2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getUserResumes, deleteResume } from '../services/resumeService';
 
 const Dashboard = () => {
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
+    const [resumes, setResumes] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchResumes = async () => {
+            if (!currentUser) return;
+            try {
+                const userResumes = await getUserResumes(currentUser.uid);
+                setResumes(userResumes);
+            } catch (error) {
+                console.error('Failed to fetch resumes:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchResumes();
+    }, [currentUser]);
 
     const handleLogout = async () => {
         try {
@@ -15,6 +34,30 @@ const Dashboard = () => {
         } catch (error) {
             console.error("Failed to log out", error);
         }
+    };
+
+    const handleDelete = async (resumeId, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!window.confirm('Are you sure you want to delete this resume?')) return;
+
+        try {
+            await deleteResume(resumeId);
+            setResumes(resumes.filter(r => r.id !== resumeId));
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('Failed to delete resume');
+        }
+    };
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return 'Unknown date';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
     };
 
     return (
@@ -54,37 +97,63 @@ const Dashboard = () => {
                     </Link>
                 </div>
 
-                {/* Empty State / Grid */}
-                <div className="grid md:grid-cols-3 gap-6">
-                    {/* Placeholder for saved resumes */}
-                    <Link to="/editor">
-                        <motion.div
-                            whileHover={{ y: -5 }}
-                            className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full flex flex-col items-center justify-center text-center min-h-[250px] border-dashed border-2 border-slate-300 hover:border-indigo-400"
-                        >
-                            <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Plus className="w-6 h-6" />
-                            </div>
-                            <h3 className="font-bold text-lg text-slate-700 mb-1">Create New Resume</h3>
-                            <p className="text-sm text-slate-400">Start from scratch</p>
-                        </motion.div>
-                    </Link>
-
-                    {/* Example Card (Visual Only) */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm opacity-50 relative overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-10 text-sm font-semibold text-slate-500 uppercase tracking-widest">Example</div>
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                                <FileText className="w-6 h-6" />
-                            </div>
-                        </div>
-                        <h3 className="font-bold text-lg text-slate-800 mb-2">Software Engineer</h3>
-                        <p className="text-xs text-slate-400 mb-4">Last edited 2 days ago</p>
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
                     </div>
-                </div>
+                ) : (
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Create New Card */}
+                        <Link to="/editor">
+                            <motion.div
+                                whileHover={{ y: -5 }}
+                                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full flex flex-col items-center justify-center text-center min-h-[200px] border-dashed border-2 border-slate-300 hover:border-indigo-400"
+                            >
+                                <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <Plus className="w-6 h-6" />
+                                </div>
+                                <h3 className="font-bold text-lg text-slate-700 mb-1">Create New Resume</h3>
+                                <p className="text-sm text-slate-400">Start from scratch</p>
+                            </motion.div>
+                        </Link>
+
+                        {/* Saved Resume Cards */}
+                        {resumes.map((resume) => (
+                            <Link to={`/editor?id=${resume.id}`} key={resume.id}>
+                                <motion.div
+                                    whileHover={{ y: -5 }}
+                                    className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full min-h-[200px] relative"
+                                >
+                                    <button
+                                        onClick={(e) => handleDelete(resume.id, e)}
+                                        className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+                                            <FileText className="w-6 h-6" />
+                                        </div>
+                                    </div>
+                                    <h3 className="font-bold text-lg text-slate-800 mb-2 truncate">
+                                        {resume.basics?.name || resume.basics?.label || 'Untitled Resume'}
+                                    </h3>
+                                    <p className="text-sm text-slate-500 mb-1">
+                                        {resume.basics?.label || 'No title'}
+                                    </p>
+                                    <p className="text-xs text-slate-400">
+                                        Last edited {formatDate(resume.updatedAt)}
+                                    </p>
+                                </motion.div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </main>
         </div>
     );
 };
 
 export default Dashboard;
+
